@@ -8,20 +8,44 @@
 
 准备 Python 3.10 或更新版本和 [Ollama](https://ollama.com/download)。安装依赖和首次下载模型需要联网。准备完成后，生成复习材料可离线进行。
 
-在项目目录打开终端。以下是 Windows PowerShell 命令：
+### 1. 获取源码
+
+已下载 ZIP 的话，先解压，再在包含 `study_notes.py` 和 `requirements.txt` 的目录打开 PowerShell。也可以用 Git 将仓库克隆到「文档」目录。把下面整个代码块一起粘贴到 PowerShell：
 
 ```powershell
-git clone https://github.com/zhangcyyyyy/langchain-study-notes.git
-cd langchain-study-notes
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-ollama pull qwen2.5:7b
-.\.venv\Scripts\python.exe study_notes.py examples/git-notes.md -o review.md
+& {
+    $project = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'langchain-study-notes'
+    git clone https://github.com/zhangcyyyyy/langchain-study-notes.git "$project"
+    if ($LASTEXITCODE -ne 0) { throw '克隆失败。请检查 Git 的报错，或下载并解压源码 ZIP。' }
+    Set-Location -LiteralPath $project -ErrorAction Stop
+}
 ```
 
-macOS 或 Linux 上可用 `python3 -m venv .venv` 创建环境，并把上面的 `.\.venv\Scripts\python.exe` 替换为 `.venv/bin/python`。
+如果已经克隆过，直接进入现有项目目录即可。只有两个源码文件都能在当前目录找到时，才继续下一步。
 
-运行前确认 Ollama 正在后台运行。也可以在另一个终端用 `ollama serve` 启动服务。生成后打开 `review.md` 即可阅读；省略 `-o review.md` 会把结果显示在终端。
+### 2. 安装并运行
+
+打开 Ollama，确保它在后台运行。如果尚未下载模型，先运行 `ollama pull qwen2.5:7b`，看到 `success` 后继续。
+
+在项目目录把下面整个代码块一起粘贴到 PowerShell：
+
+```powershell
+& {
+    if (!(Test-Path -LiteralPath 'study_notes.py' -PathType Leaf) -or
+        !(Test-Path -LiteralPath 'requirements.txt' -PathType Leaf)) {
+        throw '当前目录缺少项目文件。请先进入解压或克隆后的项目目录。'
+    }
+    python -m venv .venv
+    if ($LASTEXITCODE -ne 0) { throw '创建虚拟环境失败。' }
+    .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+    if ($LASTEXITCODE -ne 0) { throw '安装依赖失败。' }
+    .\.venv\Scripts\python.exe study_notes.py examples/git-notes.md -o review.md
+}
+```
+
+生成后打开项目目录里的 `review.md`。再次运行时可指定新的文件名，或省略 `-o review.md`，把结果显示在终端。
+
+macOS 或 Linux 上，在包含源码的目录运行 `python3 -m venv .venv`，然后用 `.venv/bin/python -m pip install -r requirements.txt` 安装依赖，最后运行 `.venv/bin/python study_notes.py examples/git-notes.md -o review.md`。
 
 输入支持 UTF-8 编码的 `.txt` 和 `.md` 文件，单份最多 4,000 字符。输出路径须指向新文件。默认模型约 4.7 GB。也可以先下载更小的模型，再用 `--model qwen2.5:1.5b` 指定模型标签。[Ollama 模型说明](https://ollama.com/library/qwen2.5)
 
